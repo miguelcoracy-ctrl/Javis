@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#03090d">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>J.A.R.V.I.S.</title>
+<style>
+:root{--void:#03090d;--deep:#071a22;--cyan:#3fe0ff;--ice:#bff6ff;--amber:#ffb347;--dim:#5f8794;--line:rgba(63,224,255,.28);--font:'Bahnschrift','Segoe UI Variable',system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--void);color:var(--ice);font-family:var(--font)}
+body{display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);overflow:hidden;background:radial-gradient(120% 60% at 50% 18%,#0a2a35 0,var(--void) 65%)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(63,224,255,.03) 0 1px,transparent 1px 4px)}
+header{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px 0}
+.brand{font-size:1rem;letter-spacing:.3em;font-weight:600;color:var(--cyan)}
+.brand small{display:block;font-size:.58rem;letter-spacing:.1em;color:var(--dim);font-weight:400;margin-top:2px}
+.clock{text-align:right;font-size:1.3rem;font-weight:300;font-variant-numeric:tabular-nums}
+.clock small{display:block;font-size:.65rem;color:var(--dim)}
+.chips{display:flex;gap:7px;padding:10px 16px 0;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:3px;padding:3px 8px;font-size:.68rem;color:var(--dim);display:flex;align-items:center;gap:6px}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.chip.on{color:var(--ice)}.chip.on i{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.chip.warn i{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.stage{display:flex;flex-direction:column;align-items:center;padding-top:8px}
+#reactor{width:min(40vw,160px);aspect-ratio:1;cursor:pointer;filter:drop-shadow(0 0 18px rgba(63,224,255,.45))}
+#reactor g[class]{transform-origin:150px 150px}
+.r1{animation:spin 24s linear infinite}.r2{animation:spin 14s linear infinite reverse}.r3{animation:spin 40s linear infinite}
+.core{animation:pulse 3.2s ease-in-out infinite}
+body[data-s=thinking] .r1{animation-duration:2.5s}body[data-s=thinking] .r2{animation-duration:1.8s}
+body[data-s=listening] .core{animation-duration:.9s}body[data-s=speaking] .core{animation-duration:.45s}
+body[data-s=listening] #reactor{filter:drop-shadow(0 0 24px rgba(255,179,71,.65))}
+body[data-s=listening] #reactor *{stroke:var(--amber)}body[data-s=listening] #reactor .fill{fill:var(--amber)}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{50%{transform:scale(1.14);opacity:.8}}
+#status{margin-top:6px;letter-spacing:.22em;font-size:.72rem;color:var(--cyan)}
+#log{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;min-height:0;scroll-behavior:smooth}
+.m{max-width:86%;padding:9px 12px;font-size:.93rem;line-height:1.42;white-space:pre-wrap;word-wrap:break-word;border:1px solid var(--line)}
+.m.j{align-self:flex-start;background:rgba(63,224,255,.07);border-radius:2px 12px 12px 12px}
+.m.u{align-self:flex-end;background:rgba(191,246,255,.1);border-radius:12px 2px 12px 12px;border-color:rgba(191,246,255,.25)}
+.m.e{align-self:center;border-color:var(--amber);color:var(--amber);font-size:.82rem}
+.bar{display:flex;gap:8px;padding:8px 12px 6px;align-items:center}
+.bar input{flex:1}
+.mic{width:52px;height:52px;border-radius:50%;border:2px solid var(--cyan);background:rgba(63,224,255,.1);color:var(--cyan);display:grid;place-items:center;flex:none}
+body[data-s=listening] .mic{border-color:var(--amber);color:var(--amber);background:rgba(255,179,71,.15)}
+.mic svg{width:24px;height:24px;fill:currentColor}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 12px 10px}
+button.btn,nav button{background:rgba(63,224,255,.06);border:1px solid var(--line);color:var(--ice);font:inherit;font-size:.78rem;padding:11px 4px;border-radius:4px}
+button:active{background:rgba(63,224,255,.22)}
+nav button.act{border-color:var(--cyan);background:rgba(63,224,255,.2)}
+.sheet{position:fixed;inset:0;background:rgba(3,9,13,.97);padding:calc(16px + env(safe-area-inset-top)) 16px 24px;overflow:auto;display:none;z-index:5}
+.sheet.open{display:block}
+.sheet h2{margin:0 0 4px;font-size:1rem;letter-spacing:.2em;color:var(--cyan)}
+.sheet p{color:var(--dim);font-size:.8rem;line-height:1.5;margin:6px 0 12px}
+label{display:block;font-size:.75rem;color:var(--dim);margin:14px 0 5px}
+input,select{width:100%;background:var(--deep);border:1px solid var(--line);color:var(--ice);font:inherit;font-size:1rem;padding:12px;border-radius:4px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.row{display:flex;gap:10px;margin-top:18px}.row .btn{flex:1;padding:13px}
+.btn.pri{background:var(--cyan);color:var(--void);font-weight:600}
+.note{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);padding:9px 10px;margin-top:8px;font-size:.88rem}
+.note span{flex:1}.note button{background:none;border:0;color:var(--amber);font-size:.8rem;padding:0 4px}
+@media(prefers-reduced-motion:reduce){#reactor *{animation:none!important}}
+</style>
+</head>
+<body data-s="idle">
+<header>
+ <div class="brand">J.A.R.V.I.S.<small>Just A Rather Very Intelligent System</small></div>
+ <div class="clock"><span id="hm">--:--</span><small id="dt"></small></div>
+</header>
+<div class="chips">
+ <div class="chip" id="cNet"><i></i>rede</div>
+ <div class="chip" id="cMic"><i></i>voz</div>
+ <div class="chip" id="cKey"><i></i>cérebro</div>
+</div>
+<div class="stage">
+ <svg id="reactor" viewBox="0 0 300 300" aria-label="Falar" role="button" tabindex="0">
+  <g fill="none" stroke="#3fe0ff">
+   <circle cx="150" cy="150" r="142" stroke-width="1" opacity=".5"/>
+   <g class="r3"><circle cx="150" cy="150" r="130" stroke-width="2" stroke-dasharray="3 9"/></g>
+   <g class="r1"><circle cx="150" cy="150" r="112" stroke-width="5" stroke-dasharray="70 28 18 28"/></g>
+   <g class="r2"><circle cx="150" cy="150" r="88" stroke-width="2.5" stroke-dasharray="10 8"/></g>
+   <circle cx="150" cy="150" r="64" stroke-width="3"/>
+   <g class="core"><circle class="fill" cx="150" cy="150" r="34" fill="#bff6ff" stroke="none"/><circle cx="150" cy="150" r="46" stroke-width="1.5" opacity=".7"/></g>
+  </g>
+ </svg>
+ <div id="status">EM ESPERA</div>
+</div>
+<div id="log" aria-live="polite"></div>
+<div class="bar">
+ <input id="txt" placeholder="Digite ou toque no microfone" enterkeyhint="send" autocomplete="off">
+ <button class="mic" id="bMic" aria-label="Falar"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12z"/></svg></button>
+</div>
+<nav>
+ <button id="bAuto">Conversa contínua</button>
+ <button id="bMem">Memória</button>
+ <button id="bCfg">Ajustes</button>
+</nav>
+
+<section class="sheet" id="mem" aria-label="Memória">
+ <h2>MEMÓRIA</h2>
+ <p>Fatos que eu sempre levo em conta. Diga "lembre que..." ou adicione abaixo. Ficam só neste aparelho.</p>
+ <input id="fNote" placeholder="Ex.: minha meta é correr 5 km">
+ <div class="row"><button class="btn pri" id="bAdd">Adicionar</button></div>
+ <div id="notes"></div>
+ <div class="row"><button class="btn" id="bHist">Apagar histórico</button><button class="btn" id="bMemX">Fechar</button></div>
+</section>
+
+<section class="sheet" id="cfg" aria-label="Ajustes">
+ <h2>AJUSTES</h2>
+ <p>Tudo fica salvo só neste aparelho. A chave da API só é enviada à Anthropic, nas suas conversas.</p>
+ <label for="fNome">Como devo chamá-lo?</label><input id="fNome" placeholder="senhor">
+ <label for="fKey">Chave da API Anthropic</label><input id="fKey" type="password" autocomplete="off" placeholder="sk-ant-...">
+ <label for="fMod">Cérebro</label>
+ <select id="fMod">
+  <option value="claude-haiku-5-5">Econômico · haiku-5-5</option>
+  <option value="claude-sonnet-5-5">Equilibrado · sonnet-5-5</option>
+  <option value="claude-opus-5-5">Máximo · opus-5-5</option>
+ </select>
+ <label for="fVel">Velocidade da voz</label>
+ <select id="fVel"><option value=".9">Calma</option><option value="1.02">Normal</option><option value="1.2">Rápida</option></select>
+ <label for="fAuto">Falar as respostas em voz alta</label>
+ <select id="fAuto"><option value="1">Sim</option><option value="0">Não</option></select>
+ <div class="row"><button class="btn" id="bFecha">Cancelar</button><button class="btn pri" id="bSalva">Salvar</button></div>
+</section>
+
+<script>
+const $=id=>document.getElementById(id),LS=localStorage;
+const MODELOS=['claude-haiku-5-5','claude-sonnet-5-5','claude-opus-5-5'];
+const jget=(k,d)=>{try{return JSON.parse(LS[k])??d}catch(e){return d}};
+const CONFIG={get nome(){return LS.jarvis_nome||'senhor'},get key(){return LS.jarvis_key||''},
+ get model(){return MODELOS.includes(LS.jarvis_model)?LS.jarvis_model:'claude-sonnet-5-5'},
+ get vel(){return parseFloat(LS.jarvis_vel)||1.02},get fala(){return LS.jarvis_fala!=='0'}};
+let hist=jget('jarvis_hist',[]),notas=jget('jarvis_notas',[]),auto=false,busy=false;
+const save=()=>{LS.jarvis_hist=JSON.stringify(hist.slice(-120));LS.jarvis_notas=JSON.stringify(notas)};
+
+// ---------- Interface ----------
+const setState=(s,t)=>{document.body.dataset.s=s;$('status').textContent=t};
+const chip=(id,on,warn)=>{$(id).className='chip'+(on?' on':'')+(warn?' warn':'')};
+function bolha(tipo,t){const d=document.createElement('div');d.className='m '+tipo;d.textContent=t;$('log').appendChild(d);$('log').scrollTop=1e9;return d}
+const tick=()=>{const d=new Date();$('hm').textContent=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+ $('dt').textContent=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})};
+tick();setInterval(tick,15000);
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function refresh(){chip('cNet',navigator.onLine,!navigator.onLine);chip('cMic',NAT||(!!SR&&!!window.speechSynthesis),!NAT&&!SR);chip('cKey',!!CONFIG.key,!CONFIG.key)}
+addEventListener('online',refresh);addEventListener('offline',refresh);
+
+// ---------- Ponte nativa (app Android) ----------
+const NAT=!!window.Android;let ttsFim=null,escN=false;const pend={};let seq=0;
+window.nativeEvent=(n,d)=>{
+ if(n==='listenStart'){escN=true;setState('listening','OUVINDO');$('txt').placeholder='Ouvindo…'}
+ else if(n==='partial')$('txt').value=d;
+ else if(n==='final')final=d;
+ else if(n==='error'){const m=d==='unavailable'?'Reconhecimento de voz indisponível neste aparelho.':d===9?'Permita o microfone nas configurações do app.':[1,2,4].includes(d)?'O reconhecimento de voz precisa de internet.':null;
+  if(d===9||d==='unavailable'||[1,2,4].includes(d)){auto=false;sync()}else if(d===6||d===7){auto=false;sync()}
+  if(m)bolha('e',m);else if(![5,6,7,8].includes(d))bolha('e','Falha ao ouvir (código '+d+').')}
+ else if(n==='listenEnd'){escN=false;$('txt').placeholder='Digite ou toque no microfone';
+  if(final){const t=final;final='';$('txt').value='';enviar(t)}else{$('txt').value='';if(document.body.dataset.s==='listening')setState('idle','EM ESPERA')}}
+ else if(n==='ttsStart')setState('speaking','FALANDO');
+ else if(n==='ttsEnd'){setState('idle','EM ESPERA');const f=ttsFim;ttsFim=null;f&&f()}
+ else if(n==='api'&&pend[d.id]){pend[d.id](d);delete pend[d.id]}};
+function ouvirNat(){if(escN){Android.stopListen();return}ttsFim=null;Android.stopSpeak();final='';Android.listen()}
+
+// ---------- Voz ----------
+let voz=null;
+function pickVoice(){const v=speechSynthesis.getVoices().filter(x=>x.lang.toLowerCase().replace('_','-').startsWith('pt'));
+ voz=v.find(x=>/male|masc|daniel|antonio|felipe/i.test(x.name))||v[0]||null}
+if(window.speechSynthesis){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+const limpa=t=>t.replace(/[*_#`>~|]/g,'').replace(/\s+/g,' ').trim();
+function falar(t,fim){if(!CONFIG.fala||(!NAT&&!window.speechSynthesis))return fim&&fim();
+ if(NAT){ttsFim=fim;Android.speak(limpa(t),CONFIG.vel);return}
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(limpa(t));u.lang='pt-BR';u.rate=CONFIG.vel;u.pitch=.8;if(voz)u.voice=voz;
+ u.onstart=()=>setState('speaking','FALANDO');u.onend=u.onerror=()=>{setState('idle','EM ESPERA');fim&&fim()};speechSynthesis.speak(u)}
+let rec=null,final='';
+function ouvir(){if(NAT)return ouvirNat();if(!SR)return bolha('e','Este navegador não reconhece voz. Use o Chrome no Android.');
+ if(rec){rec.stop();return}
+ if(window.speechSynthesis)speechSynthesis.cancel();
+ final='';rec=new SR();rec.lang='pt-BR';rec.interimResults=true;
+ rec.onstart=()=>{setState('listening','OUVINDO');$('txt').placeholder='Ouvindo…'};
+ rec.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript;$('txt').value=t;if(e.results[e.results.length-1].isFinal)final=t};
+ rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){auto=false;sync();bolha('e','Permita o microfone: toque no cadeado ao lado do endereço → Permissões.')}
+  else if(e.error==='no-speech')auto=false,sync();else if(e.error!=='aborted')bolha('e','Falha ao ouvir ('+e.error+').')};
+ rec.onend=()=>{rec=null;$('txt').placeholder='Digite ou toque no microfone';
+  if(final){const t=final;final='';$('txt').value='';enviar(t)}else{$('txt').value='';if(document.body.dataset.s==='listening')setState('idle','EM ESPERA')}};
+ rec.start()}
+
+// ---------- Módulos locais (sem gastar API). Novas funções entram aqui ----------
+const JARVIS={modulos:[]};
+JARVIS.modulos.push(
+ {nome:'hora',teste:t=>/que horas|hor[aá]rio agora|me diz as horas/i.test(t),
+  run:()=>'São '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+', '+CONFIG.nome+'.'},
+ {nome:'data',teste:t=>/que dia (é|e) hoje|qual (é )?a data/i.test(t),
+  run:()=>'Hoje é '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'.'},
+ {nome:'lembrar',teste:t=>/^(jarvis,?\s*)?(lembre|anote|memorize)( que| de)?\s+.{3,}/i.test(t),
+  run:t=>{const f=t.replace(/^(jarvis,?\s*)?(lembre|anote|memorize)( que| de)?\s+/i,'');notas.push(f);save();renderNotas();return 'Anotado, '+CONFIG.nome+': '+f}}
+);
+
+// ---------- Cérebro ----------
+function sistema(){const d=new Date().toLocaleString('pt-BR',{dateStyle:'full',timeStyle:'short'});
+ return `Você é J.A.R.V.I.S. (Just A Rather Very Intelligent System), assistente pessoal inspirado no de Tony Stark, rodando no celular Android do usuário. Trate-o por "${CONFIG.nome}". Personalidade: inteligente, elegante, calmo, humor britânico sutil, leal e proativo sem ser inconveniente. Seja honesto: nunca invente fatos e nunca finja ter acesso a câmera, apps, arquivos ou dispositivos que você não tem; diga o que não sabe. Não concorde automaticamente: analise com senso crítico e sugira melhorias. Não execute ações externas sem autorização.
+Suas respostas serão FALADAS em voz alta: frases curtas e naturais (em geral até 4 frases), sem markdown, sem listas com símbolos, sem emojis. Aprofunde só se o usuário pedir.
+Agora: ${d}.`+(NAT?'\nVocê controla o celular pelas ferramentas disponíveis. Use-as quando o usuário pedir e só diga que executou depois de ver o resultado. Ligar apenas abre o discador: o usuário toca para completar.':'')+(notas.length?`\nMemória do usuário (leve em conta):\n- ${notas.join('\n- ')}`:'')}
+const FERRAMENTAS=[
+ {name:'lanterna',description:'Liga ou desliga a lanterna do celular.',input_schema:{type:'object',properties:{ligar:{type:'boolean'}},required:['ligar']}},
+ {name:'bateria',description:'Informa a porcentagem da bateria e se está carregando.',input_schema:{type:'object',properties:{}}},
+ {name:'abrir_app',description:'Abre um aplicativo instalado, pelo nome (ex.: WhatsApp, YouTube).',input_schema:{type:'object',properties:{nome:{type:'string'}},required:['nome']}},
+ {name:'abrir_link',description:'Abre um link no navegador ou no app associado (Maps, YouTube etc.).',input_schema:{type:'object',properties:{url:{type:'string'}},required:['url']}},
+ {name:'ligar_para',description:'Abre o discador com o número preenchido; o usuário toca para ligar.',input_schema:{type:'object',properties:{numero:{type:'string'}},required:['numero']}},
+ {name:'alarme',description:'Cria um alarme no relógio do celular.',input_schema:{type:'object',properties:{hora:{type:'integer'},minuto:{type:'integer'},rotulo:{type:'string'}},required:['hora']}},
+ {name:'timer',description:'Inicia um timer em segundos.',input_schema:{type:'object',properties:{segundos:{type:'integer'},rotulo:{type:'string'}},required:['segundos']}}];
+async function chamar(body){
+ if(NAT)return new Promise(res=>{const id=++seq;pend[id]=d=>{let j={};try{j=JSON.parse(d.body||'{}')}catch(e){}res({status:d.status,json:j})};Android.http(id,JSON.stringify(body),CONFIG.key)});
+ const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':CONFIG.key,
+  'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+ return {status:r.status,json:await r.json().catch(()=>({}))}}
+async function perguntar(){
+ const msgs=hist.slice(-20).map(m=>({role:m.r,content:m.t}));
+ while(msgs.length&&msgs[0].role!=='user')msgs.shift();
+ let texto='';
+ for(let n=0;n<4;n++){
+  const body={model:CONFIG.model,max_tokens:600,system:sistema(),messages:msgs};if(NAT)body.tools=FERRAMENTAS;
+  const {status,json}=await chamar(body);
+  if(status!==200){const m=(json.error&&json.error.message)||'';
+   throw new Error(status===401?'Chave da API inválida. Confira em Ajustes.':status===429?'Limite de uso atingido. Tente em instantes.':status===404?'Modelo indisponível. Troque o cérebro em Ajustes.':status===0?'Sem conexão com a IA'+(m?' ('+m+')':'')+'.':'Erro '+status+(m?': '+m:''))}
+  const c=json.content||[];texto=c.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim()||texto;
+  const usos=c.filter(b=>b.type==='tool_use');
+  if(!usos.length||json.stop_reason!=='tool_use')return texto||'Concluído, '+CONFIG.nome+'.';
+  msgs.push({role:'assistant',content:c});
+  msgs.push({role:'user',content:usos.map(u=>{let r;try{r=String(Android.tool(u.name,JSON.stringify(u.input||{})))}catch(e){r='Falhou: '+e.message}
+   return {type:'tool_result',tool_use_id:u.id,content:r}})})}
+ return texto||'Concluído, '+CONFIG.nome+'.'}
+async function enviar(t){t=t.trim();if(!t||busy)return;busy=true;
+ bolha('u',t);hist.push({r:'user',t});save();
+ let resp;
+ try{const m=JARVIS.modulos.find(x=>x.teste(t));
+  if(m)resp=await m.run(t);
+  else if(!CONFIG.key){resp='Preciso da sua chave da API para pensar, '+CONFIG.nome+'. Abra os Ajustes e cole a chave.'}
+  else{setState('thinking','PENSANDO');resp=await perguntar()}
+ }catch(e){busy=false;setState('idle','EM ESPERA');hist.pop();save();
+  bolha('e',navigator.onLine?e.message:'Sem internet. Só consigo responder o que não depende da IA.');auto=false;sync();return}
+ hist.push({r:'assistant',t:resp});save();bolha('j',resp);busy=false;
+ if(CONFIG.fala)falar(resp,()=>{if(auto)ouvir()});else{setState('idle','EM ESPERA');if(auto)ouvir()}}
+
+// ---------- Controles ----------
+const sync=()=>$('bAuto').classList.toggle('act',auto);
+$('bMic').onclick=ouvir;$('reactor').onclick=ouvir;$('reactor').onkeydown=e=>{if(e.key==='Enter'||e.key===' ')ouvir()};
+$('txt').onkeydown=e=>{if(e.key==='Enter'){const t=$('txt').value;$('txt').value='';enviar(t)}};
+$('bAuto').onclick=()=>{auto=!auto;sync();if(auto&&!rec&&!busy)ouvir();else if(!auto&&rec)rec.stop()};
+function renderNotas(){const n=$('notes');n.innerHTML='';if(!notas.length){n.innerHTML='<p>Nenhuma memória ainda.</p>';return}
+ notas.forEach((t,i)=>{const d=document.createElement('div');d.className='note';const s=document.createElement('span');s.textContent=t;
+  const b=document.createElement('button');b.textContent='Apagar';b.onclick=()=>{notas.splice(i,1);save();renderNotas()};d.append(s,b);n.appendChild(d)})}
+$('bMem').onclick=()=>{renderNotas();$('mem').classList.add('open')};$('bMemX').onclick=()=>$('mem').classList.remove('open');
+$('bAdd').onclick=()=>{const v=$('fNote').value.trim();if(v){notas.push(v);$('fNote').value='';save();renderNotas()}};
+$('bHist').onclick=()=>{hist=[];save();$('log').innerHTML='';$('mem').classList.remove('open');bolha('j','Histórico apagado, '+CONFIG.nome+'. A memória foi mantida.')};
+$('bCfg').onclick=()=>{$('fNome').value=LS.jarvis_nome||'';$('fKey').value=CONFIG.key;$('fMod').value=CONFIG.model;$('fVel').value=String(LS.jarvis_vel||'1.02');$('fAuto').value=CONFIG.fala?'1':'0';$('cfg').classList.add('open')};
+$('bFecha').onclick=()=>$('cfg').classList.remove('open');
+$('bSalva').onclick=()=>{LS.jarvis_nome=$('fNome').value.trim();LS.jarvis_key=$('fKey').value.trim();LS.jarvis_model=$('fMod').value;
+ LS.jarvis_vel=$('fVel').value;LS.jarvis_fala=$('fAuto').value;$('cfg').classList.remove('open');refresh();bolha('j','Ajustes salvos, '+CONFIG.nome+'.')};
+
+// ---------- Início ----------
+hist.slice(-30).forEach(m=>bolha(m.r==='user'?'u':'j',m.t));
+if(!hist.length)bolha('j','Sistemas J.A.R.V.I.S. inicializados. '+(CONFIG.key?'Como posso ajudá-lo hoje?':'Para começar, abra os Ajustes e cole sua chave da API.'));
+refresh();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
